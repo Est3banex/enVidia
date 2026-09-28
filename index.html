@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enVidia Web System</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background-color: #0f1110; color: #76b900; margin: 0; padding: 20px; }
+        h1, h2, h3 { color: #76b900; margin-top: 0; }
+        
+        /* Encabezado */
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .panel { background: #1a1c1b; border: 1px solid #76b900; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(118, 185, 0, 0.1); display: flex; flex-direction: column; }
+        
+        .product { padding: 10px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .product:last-child { border-bottom: none; }
+        .badge { background: #333; color: #88d300; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+        
+        /* Botones */
+        button { background-color: #76b900; color: #000; border: none; padding: 8px 12px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        button:hover { background-color: #88d300; }
+        button:disabled { background-color: #333; color: #666; cursor: not-allowed; }
+        .btn-remove { background-color: #ff4d4d; color: #fff; padding: 2px 8px; font-size: 0.8rem; margin-left: 10px; }
+        .btn-remove:hover { background-color: #ff1a1a; }
+        .btn-secondary { background-color: #333; color: #fff; margin-left: 10px; }
+        .btn-secondary:hover { background-color: #444; }
+        .btn-outline { background-color: transparent; border: 1px solid #76b900; color: #76b900; }
+        .btn-outline:hover { background-color: #76b900; color: #000; }
+
+        /* Listas e Inputs */
+        #cart-items { list-style: none; padding-left: 0; margin-top: 0; }
+        #cart-items li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #333; }
+        input { padding: 8px; margin-bottom: 5px; width: calc(100% - 18px); background: #222; border: 1px solid #555; color: #fff; border-radius: 4px; }
+        
+        /* Textos de advertencia y error */
+        .warning-text { color: #ffaa00; font-size: 0.85rem; font-style: italic; margin-bottom: 15px; }
+        .error-message { color: #ff4d4d; font-size: 0.85rem; margin-bottom: 10px; min-height: 1.2em; display: block; }
+
+        /* Modales */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { background: #1a1c1b; border: 2px solid #76b900; padding: 25px; border-radius: 8px; width: 100%; max-width: 450px; box-shadow: 0 0 15px rgba(118, 185, 0, 0.3); }
+        .receipt-list { background: #111; border: 1px solid #333; padding: 10px 15px; border-radius: 4px; margin: 10px 0; list-style: none; }
+        .receipt-list li { border-bottom: 1px solid #222; padding: 4px 0; color: #ccc; }
+        .history-card { background: #111; border: 1px solid #333; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1 style="margin: 0;">enVidia Hardware Store</h1>
+        <button id="btn-show-history" class="btn-outline" style="display: none;">Mis Compras</button>
+    </div>
+    
+    <div class="grid">
+        <!-- Panel 1: Catálogo -->
+        <div class="panel">
+            <h2>Catálogo de Hardware</h2>
+            <div id="catalog-container"></div>
+        </div>
+
+        <!-- Panel 2: Checkout -->
+        <div class="panel">
+            <h2>Carrito & Checkout</h2>
+            <ul id="cart-items"></ul>
+            <p><strong>Subtotal:</strong> $<span id="cart-total">0</span></p>
+            
+            <div style="margin-top: auto;">
+                <input type="email" id="checkout-email" placeholder="Tu correo electrónico">
+                <input type="text" id="checkout-address" placeholder="Dirección de envío">
+                <span id="checkout-error" class="error-message"></span>
+                <button id="btn-checkout" style="width: 100%;">Pagar y Enviar</button>
+            </div>
+        </div>
+
+        <!-- Panel 3: Comunicaciones -->
+        <div class="panel">
+            <h2>Comunicaciones enVidia</h2>
+            <p>Suscríbete para novedades de hardware y arquitecturas.</p>
+            <div style="margin-top: auto;">
+                <input type="email" id="newsletter-email" placeholder="Correo electrónico">
+                <span id="newsletter-error" class="error-message"></span>
+                <button id="btn-subscribe" style="width: 100%;">Suscribirse</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1: Pago y Recibo -->
+    <div id="checkout-modal" class="modal-overlay">
+        <div class="modal-card">
+            <!-- Paso 1: Pago -->
+            <div id="modal-step-payment">
+                <h2>Pasarela de Pago (enVidia Pay)</h2>
+                <p class="warning-text">⚠️ Entorno de pruebas: Ingrese datos ficticios.</p>
+                <input type="text" id="card-name" placeholder="Nombre en la tarjeta (ej. Juan Pérez)">
+                <input type="text" id="card-number" placeholder="Número de tarjeta (ej. 4000 0000 0000 0000)">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="card-exp" placeholder="MM/AA">
+                    <input type="text" id="card-cvv" placeholder="CVV">
+                </div>
+                <span id="payment-error" class="error-message"></span>
+                <div style="margin-top: 10px;">
+                    <button id="btn-confirm-payment">Confirmar Pago</button>
+                    <button id="btn-cancel-payment" class="btn-secondary">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Paso 2: Recibo -->
+            <div id="modal-step-receipt" style="display: none;">
+                <h2>¡Compra Completada!</h2>
+                <p style="color: #fff;">Gracias por tu pedido. El comprobante fue generado.</p>
+                
+                <h3>Resumen de Pedido</h3>
+                <ul id="receipt-items" class="receipt-list"></ul>
+                <p><strong>Envío a:</strong> <span id="receipt-address" style="color: #fff;"></span></p>
+                <p><strong>Total Cobrado:</strong> $<span id="receipt-total" style="color: #88d300;"></span></p>
+
+                <button id="btn-continue-shopping" style="width: 100%; margin-top: 15px;">Seguir Comprando</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Historial de Compras -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <h2 style="margin: 0;">Mis Compras</h2>
+                <button id="btn-close-history" class="btn-remove">X</button>
+            </div>
+            <p style="margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <small id="modal-user-email">Usuario: No registrado</small>
+            </p>
+            <div id="modal-history-container" style="overflow-y: auto; max-height: 300px;">
+                <!-- Aquí se inyectan las compras -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/app.js"></script>
+</body>
+</html>

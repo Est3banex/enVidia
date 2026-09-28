@@ -1,0 +1,26 @@
+[
+  {
+    "id": "R1",
+    "adr": "ADR-003",
+    "tipo": "importacion",
+    "modulo": "catalogo",
+    "no_puede_importar": ["comunicaciones"],
+    "porque": "El catálogo no debe ser capaz de enviar ningún aviso de manera directa, toda comunicación pasa por checkout."
+  },
+  {
+    "id": "R2",
+    "adr": "ADR-001",
+    "tipo": "funcional",
+    "modulo": "catalogo",
+    "prueba": "inventario_dinamico",
+    "porque": "El inventario debe actualizarse dinámicamente tras cada compra para garantizar la consistencia de los datos."
+  },
+  {
+    "id": "R3",
+    "adr": "ADR-002",
+    "tipo": "funcional",
+    "modulo": "checkout",
+    "prueba": "resiliencia_historial",
+    "porque": "Si el servicio de comunicaciones falla, la compra debe persistirse en el historial de 'Mis Compras'."
+  }
+]
