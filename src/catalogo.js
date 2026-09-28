@@ -1,4 +1,5 @@
 // Base de datos en memoria con diversidad de Hardware enVidia
+import { suscribirBoletin } from './comunicaciones.js';
 const productos = [
     { id: 1, nombre: "GeForce RTX 5090", categoria: "GPU", precio: 1999, stock: 3 },
     { id: 2, nombre: "Grace CPU Superchip", categoria: "CPU", precio: 4500, stock: 2 },
