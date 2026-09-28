@@ -17,3 +17,24 @@ jobs:
           node-version: '20'
       - name: Revisar que se respeten los ADR
         run: node tools/verificar.js
+  desplegar:
+    name: 2. Desplegar a GitHub Pages
+    needs: verificar          # <-- si el paso 1 falla, este NUNCA corre
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      # enablement: intenta encender Pages solo. Si no tiene permiso,
+      # hay que activarlo a mano en Settings > Pages > Source: GitHub Actions
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4    
